@@ -157,7 +157,11 @@ def build_report(df: pd.DataFrame, cfg: dict) -> str:
 
     # Load taxonomy and normalize condition labels → canonical IDs
     taxonomy_file = ci_cfg.get("taxonomy_file", "condition_taxonomy.yaml")
-    taxonomy_map  = load_taxonomy_map(taxonomy_file)
+    if taxonomy_file:
+        taxonomy_map = load_taxonomy_map(taxonomy_file)
+    else:
+        taxonomy_map = {}
+        log.info("No taxonomy file — using dynamic condition labels")
     if taxonomy_map:
         df = df.copy()
         df["condition_classification"] = df["condition_classification"].apply(

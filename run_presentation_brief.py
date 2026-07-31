@@ -14,7 +14,7 @@ Document structure:
   4. Part III: Clinical Impact (if Stage 5b ran) — leverage rubric, then one H2
      per subclassification with top intervention, MCID status, protocol
   5. Part IV: Spin & Governance Overview
-  6. References — AMA style, numbered, matching in-text superscript citations
+  6. References — APA 7th edition style, numbered, matching in-text superscript citations
 
 Usage:
     python3 run_presentation_brief.py
@@ -195,32 +195,82 @@ class CitationManager:
         return self._map.get(str(pmid), 0)
 
     def references(self) -> list[tuple[int, str]]:
-        """Return sorted list of (number, AMA_formatted_citation)."""
+        """Return sorted list of (number, APA_7th_edition_formatted_citation)."""
         refs = []
         for pmid, num in sorted(self._map.items(), key=lambda x: x[1]):
             a = self._articles[pmid]
             authors_raw = a.get("authors", "") or ""
             if isinstance(authors_raw, list):
                 authors_raw = "; ".join(authors_raw)
-            # Format authors: Last FM style, max 3 then et al
-            parts = [p.strip() for p in re.split(r";|,\s+(?=[A-Z])", authors_raw) if p.strip()]
-            if len(parts) > 3:
-                author_str = f"{parts[0]}, et al"
-            elif parts:
-                author_str = ", ".join(parts)
+
+            # Parse semicolon-separated author list
+            raw_parts = [p.strip() for p in re.split(r"\s*;\s*", authors_raw) if p.strip()]
+
+            def format_apa_author(name: str) -> str:
+                """Convert author name to APA 'Last, F. M.' format.
+                Handles: 'Smith JA', 'Smith, JA', 'Smith, John A', 'Smith J A'
+                """
+                name = name.strip()
+                if not name:
+                    return name
+
+                # Split on comma first
+                if "," in name:
+                    parts = name.split(",", 1)
+                    last = parts[0].strip()
+                    given = parts[1].strip()
+                else:
+                    # No comma — assume last name is first token
+                    tokens = name.split()
+                    if len(tokens) == 1:
+                        return name
+                    last = tokens[0]
+                    given = " ".join(tokens[1:])
+
+                # Extract initials from given names/initials string
+                # Only take uppercase letters as initials (ignore lowercase words)
+                initials = []
+                for token in given.split():
+                    # If token is all uppercase letters, treat each as an initial
+                    if token.isupper() and len(token) <= 4:
+                        initials.extend(list(token))
+                    # If token starts with uppercase, take first letter
+                    elif token and token[0].isupper():
+                        initials.append(token[0])
+
+                # Cap at 2 initials (first + middle)
+                initials = initials[:2]
+                initials_str = " ".join(f"{i}." for i in initials)
+
+                return f"{last}, {initials_str}" if initials_str else last
+
+            formatted = [format_apa_author(p) for p in raw_parts]
+            # Remove any empty strings
+            formatted = [f for f in formatted if f]
+
+            # APA 7th: up to 20 authors, then ... last author
+            if len(formatted) > 20:
+                author_str = ", ".join(formatted[:19]) + ", . . . " + formatted[-1]
+            elif len(formatted) > 1:
+                author_str = ", ".join(formatted[:-1]) + ", & " + formatted[-1]
+            elif formatted:
+                author_str = formatted[0]
             else:
                 author_str = "Unknown"
-            title   = (a.get("title", "") or "").strip().rstrip(".")
-            journal = (a.get("journal", "") or "").strip()
-            year    = str(a.get("year", "") or "").strip()
-            doi     = (a.get("doi", "") or "").strip()
-            pmid_str = pmid
-            # AMA format: Author(s). Title. Journal. Year. doi:xxx. PMID:xxx
-            ref = f"{author_str}. {title}. {journal}. {year}."
+
+            title    = (a.get("title", "") or "").strip().rstrip(".")
+            journal  = (a.get("journal", "") or "").strip()
+            # Check both year and publication_year fields
+            year     = str(a.get("year", "") or a.get("publication_year", "") or "").strip()
+            doi      = (a.get("doi", "") or "").strip()
+
+            year_str = f"({year})" if year else "(n.d.)"
+            ref = f"{author_str}. {year_str}. {title}. {journal}."
             if doi:
-                ref += f" doi:{doi}."
-            if pmid_str:
-                ref += f" PMID:{pmid_str}."
+                clean_doi = doi.lstrip("https://doi.org/").lstrip("doi:")
+                ref += f" https://doi.org/{clean_doi}"
+            elif pmid:
+                ref += f" PMID: {pmid}"
             refs.append((num, ref))
         return refs
 
@@ -237,10 +287,16 @@ def set_cell_bg(cell, hex_color: str):
 
 
 def add_superscript(run):
+    """Apply superscript formatting to a run using correct OOXML element order."""
     rPr = run._r.get_or_add_rPr()
+    # Remove any existing vertAlign to avoid duplicates
+    for existing in rPr.findall(qn("w:vertAlign")):
+        rPr.remove(existing)
     vertAlign = OxmlElement("w:vertAlign")
     vertAlign.set(qn("w:val"), "superscript")
     rPr.append(vertAlign)
+    # Also set font size explicitly for superscripts
+    run.font.size = Pt(8)
 
 
 def add_run(para, text: str, bold=False, italic=False, size=None,
@@ -612,6 +668,28 @@ def build_brief(cfg: dict, articles: list, syntheses: list,
         if n_cluster == 0:
             n_cluster = s.get("n_articles", s.get("article_count", 0)) or 0
 
+        # Build citation range string for this cluster e.g. "(1-4, 6, 9, 22-56)"
+        all_nums = sorted([cite_mgr.number(str(a.get("pmid","")))
+                          for a in cluster_articles
+                          if cite_mgr.number(str(a.get("pmid","")))])
+
+        def nums_to_range_str(nums: list[int]) -> str:
+            """Convert [1,2,3,6,7,10] to '1-3, 6-7, 10'"""
+            if not nums:
+                return ""
+            ranges = []
+            start = end = nums[0]
+            for n in nums[1:]:
+                if n == end + 1:
+                    end = n
+                else:
+                    ranges.append(f"{start}-{end}" if end > start else str(start))
+                    start = end = n
+            ranges.append(f"{start}-{end}" if end > start else str(start))
+            return ", ".join(ranges)
+
+        cite_range = f"({nums_to_range_str(all_nums)})" if all_nums else ""
+
         h2(doc, f"2.{idx}  {cluster_label}")
         grade_spectrum_bar(doc, cert)
 
@@ -620,23 +698,42 @@ def build_brief(cfg: dict, articles: list, syntheses: list,
         add_run(p, "Recommendation: ", bold=True, size=11)
         color = TEAL if rec_dir == "FOR" else RED if rec_dir == "AGAINST" else GREY
         add_run(p, f"{rec_dir} ({rec_str})", bold=True, size=11, color=color)
-        add_run(p, f"   |   Articles: {n_cluster}", size=11, color=GREY)
+        add_run(p, f"   |   Articles: {n_cluster}   |   ", size=11, color=GREY)
+        add_run(p, cite_range, bold=True, size=11, color=TEAL)
 
         h3(doc, "Key Findings")
         if key_findings:
-            # Split compound findings into bullets and add citations
             sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", key_findings) if s.strip()]
             for sent in sentences:
-                # Find PMIDs mentioned via citation manager
-                cites = [a.get("pmid") for a in cluster_articles[:3]]
                 p = doc.add_paragraph(style="List Bullet")
                 p.paragraph_format.space_after = Pt(3)
                 add_run(p, sent, size=11)
-                for pmid in cites:
-                    if pmid:
-                        num = cite_mgr.number(str(pmid))
-                        if num:
-                            add_run(p, str(num), size=8, superscript=True)
+                # Append cite range inline at end of each finding
+                if cite_range:
+                    add_run(p, f" {cite_range}", size=11, color=GREY)
+
+        # Add article list for this cluster so clinician knows which articles are included
+        if cluster_articles:
+            h3(doc, f"Articles in This Cluster (n={len(cluster_articles)})")
+            for ca in cluster_articles:
+                pmid = str(ca.get("pmid", ""))
+                title = (ca.get("title", "") or "").strip()[:100]
+                authors_raw = ca.get("authors", "") or ""
+                if isinstance(authors_raw, list):
+                    authors_raw = "; ".join(authors_raw)
+                first_author = authors_raw.split(";")[0].strip().split(",")[0].strip() \
+                               if authors_raw else "Unknown"
+                year = str(ca.get("year", ca.get("publication_year", "")) or "").strip()
+                oxford = ca.get("oxford_roman", "?")
+                num = cite_mgr.number(pmid) if pmid else 0
+                num_str = f"{num}. " if num else ""
+                p = doc.add_paragraph(style="List Bullet")
+                p.paragraph_format.space_after = Pt(2)
+                p.paragraph_format.left_indent = Inches(0.25)
+                add_run(p, num_str, bold=True, size=10, color=TEAL)
+                add_run(p, f"{first_author} ({year}) — ", bold=True, size=10)
+                add_run(p, f"{title}...", size=10, color=GREY)
+                add_run(p, f"  [Oxford {oxford}]", size=9, color=GREY, italic=True)
 
         h3(doc, "Clinician Recommendation")
         if clin_rec:
@@ -891,8 +988,9 @@ def build_brief(cfg: dict, articles: list, syntheses: list,
     # ── REFERENCES ────────────────────────────────────────────────────────────
     h1(doc, "References")
     add_divider(doc)
-    para_after(doc, "References are formatted in AMA style. Numbers correspond to "
-                    "in-text citations throughout this document.", size=11, color=GREY)
+    para_after(doc, "References are formatted in APA 7th edition style. "
+                    "Numbers correspond to in-text citations throughout this document.", 
+               size=11, color=GREY)
     doc.add_paragraph()
 
     refs = cite_mgr.references()

@@ -272,7 +272,7 @@ def main():
     cfg, ci_cfg = load_config()
 
     mcid_file    = ci_cfg.get("mcid_file", "mcid_reference.yaml")
-    taxonomy_file = ci_cfg.get("taxonomy_file", "condition_taxonomy.yaml")
+    taxonomy_file = ci_cfg.get("taxonomy_file") or None
     output_dir   = Path("summaries/clinical_impact")
     ledger_path  = Path("clinical_impact_ledger.csv")
     prompt_file  = Path("prompts/stages/stage5b_clinical_impact.txt")
@@ -281,7 +281,11 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     mcid_db   = load_mcid_reference(mcid_file)
-    taxonomy  = load_taxonomy(taxonomy_file)
+    if taxonomy_file:
+        taxonomy = load_taxonomy(taxonomy_file)
+    else:
+        taxonomy = []
+        log.info("No taxonomy file configured — using dynamic subclassification")
 
     if not prompt_file.exists():
         log.error(f"Stage 5b prompt not found: {prompt_file}")

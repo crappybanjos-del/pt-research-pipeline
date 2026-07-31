@@ -78,16 +78,21 @@ def main():
     for p in [ledger, layer0_ledger, layer2_ledger, layer3_ledger,
               Path("layer3_clusters.json"), Path("layer3_clusters.csv"),
               Path("layer3_cluster_definitions.json"),
+              Path("clinical_impact_ledger.csv"),
               Path(".pipeline_checkpoint.json")]:
         if p.exists():
             move_targets.append(p)
 
-    for pattern in ["*_evidence_base_*.xlsx", "*_synthesis_report_*.md"]:
+    for pattern in ["*_evidence_base_*.xlsx", "*_synthesis_report_*.md",
+                    "*_clinical_impact_report_*.md"]:
         for f in glob.glob(pattern):
             move_targets.append(Path(f))
 
     for d in [cache_root, articles_dir, summaries_root, logs_root]:
-        if d.exists() and any(d.iterdir()):
+        if d.is_symlink():
+            log.warning(f"  SKIPPING {d} — it is a symlink, not a real directory. "
+                        f"Remove symlink and ensure real data is in place before archiving.")
+        elif d.exists() and any(d.iterdir()):
             move_targets.append(d)
 
     # ── Report plan ──────────────────────────────────────────────────────────
@@ -118,6 +123,10 @@ def main():
 
     for p in move_targets:
         dest = archive_dir / p.name
+        if p.is_symlink():
+            log.warning(f"  SKIPPING {p} — symlink detected, not real data. "
+                        f"Clean up symlinks before running archive.")
+            continue
         if dest.exists():
             log.warning(f"  {dest} already exists in archive — skipping {p}")
             continue
@@ -129,8 +138,9 @@ def main():
         log.info(f"  copied config.yaml -> {archive_dir / 'config.yaml'}")
 
     # ── Recreate empty baseline directories ─────────────────────────────────
+    summaries_clinical_impact = Path("summaries/clinical_impact")
     for d in [full_text_cache, articles_dir, summaries_layer0, summaries_layer2,
-              summaries_layer3, logs_root]:
+              summaries_layer3, summaries_clinical_impact, logs_root]:
         d.mkdir(parents=True, exist_ok=True)
         log.info(f"  recreated empty: {d}")
 

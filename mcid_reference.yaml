@@ -325,3 +325,240 @@ outcome_measures:
     mcid_percent: null
     conditions: ["carpal tunnel syndrome", "wrist", "hand"]
     source: "Bland JD 2001"
+
+  # ── ACUTE CARE / DISCHARGE DISPOSITION ──────────────────────────────────────
+
+  FIM:
+    full_name: "Functional Independence Measure"
+    abbreviations: ["FIM", "FIM score", "Functional Independence Measure", "WeeFIM"]
+    scale: "18-126 (total); 13-91 motor; 5-35 cognitive"
+    direction: increase
+    mcid_absolute: 22
+    mcid_percent: null
+    mcid_note: >
+      22-point total FIM change commonly cited for inpatient rehabilitation.
+      For discharge disposition prediction, FIM motor score <47 predicts SNF/institutional
+      discharge; FIM motor ≥47 predicts home discharge (Menon et al. 2012).
+      FIM efficiency (change per day) also used as outcome metric.
+    discharge_prediction_threshold:
+      home: "FIM motor ≥ 47-54"
+      snf_or_inpatient_rehab: "FIM motor < 47"
+    conditions: ["acute care", "stroke", "brain injury", "spinal cord injury",
+                 "orthopedic", "general medical", "inpatient rehabilitation"]
+    source: "Menon N et al. PM R 2012; Stineman MG et al. Arch Phys Med Rehabil 1996;
+             Linacre JM et al. Arch Phys Med Rehabil 1994"
+
+  AMPAC_6clicks:
+    full_name: "Activity Measure for Post-Acute Care — 6-Clicks"
+    abbreviations: ["AM-PAC", "AM-PAC 6-clicks", "6-clicks", "AMPAC", "Activity Measure Post-Acute Care"]
+    scale: "6-24 (basic mobility); 6-24 (daily activity)"
+    direction: increase
+    mcid_absolute: 2
+    mcid_percent: null
+    mcid_note: >
+      2-point change on 6-24 scale considered clinically meaningful.
+      Basic mobility score ≤14 predicts non-home discharge with sensitivity ~73%,
+      specificity ~72% (Jette DU et al. 2014). Score ≥19 strongly predicts home discharge.
+      Widely used in acute care PT/OT documentation for discharge planning.
+    discharge_prediction_threshold:
+      home: "Basic mobility score ≥ 19"
+      non_home: "Basic mobility score ≤ 14"
+      sensitivity: "73%"
+      specificity: "72%"
+    conditions: ["acute care", "general medical", "orthopedic", "stroke",
+                 "cardiac", "pulmonary", "discharge planning"]
+    source: "Jette DU et al. Phys Ther 2014; Jette DU et al. Arch Phys Med Rehabil 2012"
+
+  Barthel:
+    full_name: "Barthel Index"
+    abbreviations: ["Barthel", "BI", "Barthel Index", "Barthel ADL", "Modified Barthel"]
+    scale: "0-100 (standard) or 0-20 (modified)"
+    direction: increase
+    mcid_absolute: 10
+    mcid_percent: null
+    mcid_note: >
+      10-point change on 0-100 scale commonly cited.
+      For discharge disposition: score <60 predicts institutionalization;
+      score ≥60 associated with community/home discharge.
+      Modified Barthel (0-20): score <12 predicts institutional care.
+    discharge_prediction_threshold:
+      home: "Barthel ≥ 60 (standard scale)"
+      institutional: "Barthel < 60 (standard scale)"
+    conditions: ["acute care", "stroke", "neurological", "orthopedic",
+                 "general medical", "discharge planning"]
+    source: "Mahoney FI & Barthel DW 1965; Shah S et al. Aust Occup Ther J 1989;
+             Ween JE et al. Neurology 1996"
+
+  MoCA:
+    full_name: "Montreal Cognitive Assessment"
+    abbreviations: ["MoCA", "Montreal Cognitive Assessment"]
+    scale: "0-30"
+    direction: increase
+    mcid_absolute: 2
+    mcid_percent: null
+    mcid_note: >
+      2-point change considered clinically meaningful.
+      Score <26 indicates cognitive impairment; <18 indicates moderate-severe impairment.
+      Relevant to discharge disposition — cognitive status influences ability to return home
+      safely and need for supervised placement.
+    discharge_prediction_threshold:
+      home_independent: "MoCA ≥ 26"
+      supervised_placement: "MoCA < 18"
+    conditions: ["acute care", "stroke", "dementia", "cognitive impairment",
+                 "neurological", "discharge planning"]
+    source: "Nasreddine ZS et al. J Am Geriatr Soc 2005; Pendlebury ST et al. Stroke 2012"
+
+  TUG:
+    full_name: "Timed Up and Go Test"
+    abbreviations: ["TUG", "Timed Up and Go", "TUG test"]
+    scale: "seconds (lower = better)"
+    direction: decrease
+    mcid_absolute: 3.5
+    mcid_percent: null
+    mcid_note: >
+      3.5-second change commonly cited for community-dwelling older adults.
+      For discharge prediction: TUG >20 seconds predicts non-home discharge;
+      TUG ≤12 seconds associated with independent community ambulation.
+      TUG >30 seconds indicates high fall risk and dependent mobility status.
+    discharge_prediction_threshold:
+      home_independent: "TUG ≤ 12 seconds"
+      supervision_required: "TUG 12-20 seconds"
+      non_home_discharge: "TUG > 20 seconds"
+    conditions: ["acute care", "geriatric", "fall risk", "orthopedic",
+                 "stroke", "discharge planning", "mobility"]
+    source: "Podsiadlo D & Richardson S 1991; Bohannon RW 2006; Bischoff HA et al. Age Ageing 2003"
+
+  BBS:
+    full_name: "Berg Balance Scale"
+    abbreviations: ["BBS", "Berg Balance Scale", "Berg Balance"]
+    scale: "0-56"
+    direction: increase
+    mcid_absolute: 4
+    mcid_percent: null
+    mcid_note: >
+      4-7 point change commonly cited depending on population.
+      For discharge disposition: score <45 indicates fall risk requiring supervision;
+      score <36 indicates high fall risk; score ≥45-49 associated with community ambulation.
+    discharge_prediction_threshold:
+      community_ambulation: "BBS ≥ 45"
+      supervision_required: "BBS 36-44"
+      high_fall_risk: "BBS < 36"
+    conditions: ["acute care", "stroke", "neurological", "geriatric",
+                 "fall risk", "discharge planning", "balance"]
+    source: "Berg KO et al. Arch Phys Med Rehabil 1992; Stevenson TJ 2001"
+
+  Gait_Speed:
+    full_name: "Gait Speed / 10-Meter Walk Test"
+    abbreviations: ["gait speed", "10MWT", "10-meter walk", "10m walk",
+                    "comfortable gait speed", "walking speed"]
+    scale: "meters per second"
+    direction: increase
+    mcid_absolute: 0.10
+    mcid_percent: null
+    mcid_note: >
+      0.10 m/s change is widely accepted MCID.
+      Meaningful functional thresholds for discharge:
+      <0.4 m/s: limited community ambulation, likely requires supervised placement;
+      0.4-0.8 m/s: limited community ambulation, may manage with assistance;
+      ≥0.8 m/s: community ambulator, supports home discharge;
+      ≥1.0 m/s: full community ambulation.
+    discharge_prediction_threshold:
+      home_community: "≥ 0.8 m/s"
+      limited_community: "0.4-0.8 m/s"
+      institutional_likely: "< 0.4 m/s"
+    conditions: ["acute care", "stroke", "neurological", "orthopedic",
+                 "geriatric", "discharge planning", "ambulation"]
+    source: "Perera S et al. J Am Geriatr Soc 2006; Fritz S & Lusardi M 2009;
+             Perry J et al. Top Stroke Rehabil 1995"
+
+  MMSQ:
+    full_name: "Mini-Mental State Examination"
+    abbreviations: ["MMSE", "MMSQ", "Mini-Mental State Examination",
+                    "Mini Mental Status Exam"]
+    scale: "0-30"
+    direction: increase
+    mcid_absolute: 3
+    mcid_percent: null
+    mcid_note: >
+      3-point change considered clinically meaningful.
+      Score <24 indicates cognitive impairment; <18 moderate impairment; <10 severe.
+      Used alongside functional assessments to determine discharge safety and supervision needs.
+    discharge_prediction_threshold:
+      home_independent: "MMSE ≥ 24"
+      supervised_care: "MMSE < 18"
+    conditions: ["acute care", "geriatric", "dementia", "cognitive impairment",
+                 "stroke", "neurological", "discharge planning"]
+    source: "Folstein MF et al. J Psychiatr Res 1975; Tombaugh TN & McIntyre NJ 1992"
+
+  AMPAC_outpatient:
+    full_name: "Activity Measure for Post-Acute Care — Outpatient"
+    abbreviations: ["AM-PAC outpatient", "AMPAC outpatient", "AM-PAC-CAT"]
+    scale: "0-100"
+    direction: increase
+    mcid_absolute: 4
+    mcid_percent: null
+    mcid_note: >
+      Computer-adaptive test version (AM-PAC-CAT) used in outpatient settings.
+      4-point change on 0-100 scale considered meaningful.
+      Distinct from 6-clicks inpatient version.
+    conditions: ["outpatient", "post-acute care", "rehabilitation"]
+    source: "Jette AM et al. Phys Ther 2007"
+
+  KATZ_ADL:
+    full_name: "Katz Index of Independence in Activities of Daily Living"
+    abbreviations: ["Katz", "Katz ADL", "Katz Index", "Katz Independence"]
+    scale: "0-6 (6 = fully independent)"
+    direction: increase
+    mcid_absolute: 1
+    mcid_percent: null
+    mcid_note: >
+      1-point change on 6-point scale considered meaningful.
+      Score of 6 = independent in all ADLs (supports home discharge);
+      Score ≤3 = dependent in ≥3 ADLs (indicates need for supervised placement).
+      Commonly used in acute care and nursing documentation.
+    discharge_prediction_threshold:
+      home_independent: "Katz = 6"
+      supervised_placement: "Katz ≤ 3"
+    conditions: ["acute care", "geriatric", "general medical",
+                 "discharge planning", "ADL", "nursing home"]
+    source: "Katz S et al. JAMA 1963; Hartigan I 2007"
+
+  Six_Minute_Walk:
+    full_name: "Six-Minute Walk Test"
+    abbreviations: ["6MWT", "6-minute walk", "6MWD", "six minute walk test",
+                    "6 minute walk"]
+    scale: "meters walked in 6 minutes"
+    direction: increase
+    mcid_absolute: 50
+    mcid_percent: null
+    mcid_note: >
+      50-meter change widely cited as MCID across populations.
+      For discharge prediction in cardiac/pulmonary:
+      <150m: severely limited, institutional care likely;
+      150-300m: moderately limited, may need supervised placement;
+      >300m: supports community/home discharge with appropriate support.
+    discharge_prediction_threshold:
+      home_community: "> 300 meters"
+      supervised_care: "< 150 meters"
+    conditions: ["acute care", "cardiac", "pulmonary", "COPD", "heart failure",
+                 "discharge planning", "exercise capacity"]
+    source: "Holland AE et al. Eur Respir J 2014; ATS Committee 2002"
+
+  FOIS:
+    full_name: "Functional Oral Intake Scale"
+    abbreviations: ["FOIS", "Functional Oral Intake Scale"]
+    scale: "1-7 (1=tube feeding only, 7=normal diet)"
+    direction: increase
+    mcid_absolute: 1
+    mcid_percent: null
+    mcid_note: >
+      1-level change considered clinically meaningful.
+      Relevant to discharge disposition — patients on tube feeding (FOIS 1-3)
+      typically require skilled nursing facility placement for ongoing management.
+      FOIS 6-7 supports home discharge with normal or modified diet.
+    discharge_prediction_threshold:
+      home_with_modified_diet: "FOIS ≥ 6"
+      snf_or_skilled_care: "FOIS ≤ 3"
+    conditions: ["acute care", "stroke", "dysphagia", "neurological",
+                 "discharge planning", "swallowing", "speech therapy"]
+    source: "Crary MA et al. Dysphagia 2005"
